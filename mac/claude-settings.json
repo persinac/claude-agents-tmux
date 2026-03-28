@@ -1,0 +1,50 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$TMUX_PANE\" ] && tmux set-window-option -t \"$TMUX_PANE\" @waiting 1 && tmux set-option -w -t \"$TMUX_PANE\" @wait_since \"$(date +%s)\" && WNAME=$(tmux display-message -t \"$TMUX_PANE\" -p '#W') && \"$HOME/.tmux/notify.sh\" \"Claude Code\" \"Agent $WNAME waiting for input\" && echo \"$(date +%s) wait $TMUX_PANE\" >> \"$HOME/.tmux/apm.log\"; true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$TMUX_PANE\" ] && tmux set-window-option -t \"$TMUX_PANE\" @waiting 0 && tmux set-option -wu -t \"$TMUX_PANE\" @wait_since && echo \"$(date +%s) agent $TMUX_PANE\" >> \"$HOME/.tmux/apm.log\"; true"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(glab mr *)",
+      "Bash(glab pipeline *)",
+      "Bash(glab ci *)",
+      "Bash(glab api *)",
+      "Bash(git branch *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git status*)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git rebase *)",
+      "Bash(git push *)",
+      "Bash(git remote *)",
+      "Bash(git rev-parse *)",
+      "Bash(python3 -c *)",
+      "Bash(python3 -m *)",
+      "Bash(echo *)",
+      "Bash(env)",
+      "Bash(grep *)",
+      "Bash(uv run *)"
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+# ── Agent orchestration ────────────────────────────────────────
+
+work() {
+  local session=${1:-agents}
+  if [ -n "$TMUX" ]; then
+    tmux switch-client -t "$session" 2>/dev/null || (tmux new-session -d -s "$session" && tmux switch-client -t "$session")
+  else
+    tmux new-session -A -s "$session"
+  fi
+}
+
+# claude-init — scaffold a CLAUDE.md in the current repo from the template
+claude-init() {
+  local template="${0:A:h}/../CLAUDE.md.template"
+  if [ -f "CLAUDE.md" ]; then
+    echo "CLAUDE.md already exists in $(pwd)"
+    return 1
+  fi
+  if [ ! -f "$template" ]; then
+    echo "Template not found at $template"
+    return 1
+  fi
+  cp "$template" CLAUDE.md
+  echo "Created CLAUDE.md in $(pwd) — edit it to match your project"
+}
+
+# qa <message> — send the same response to ALL waiting agents
+# e.g., qa 1 (approve all), qa 2 (approve all + don't ask again)
+qa() {
+  local msg="${1:?"Usage: qa <message>"}"
+  shift 2>/dev/null
+  [ -n "$*" ] && msg="$msg $*"
+  local session=${TMUX_AGENT_SESSION:-agents}
+  local sent=0
+  for win in $(tmux list-windows -t "$session" -F "#{window_index}:#{@waiting}" 2>/dev/null); do
+    local idx="${win%%:*}"
+    local waiting="${win##*:}"
+    if [ "$waiting" = "1" ]; then
+      q "$idx" "$msg"
+      ((sent++))
+    fi
+  done
+  echo "Sent to $sent waiting agent(s)"
+}
+
+# v <N> — quick view: float an overlay showing the last 30 lines of agent N
+v() {
+  local slot=${1:?"Usage: v <slot>"}
+  echo "$(date +%s) human-v agents:${slot}" >> "$HOME/.tmux/apm.log"
+  tmux display-popup -E -w 100 -h 32 \
+    "tmux capture-pane -t agents:${slot} -p | tail -30; echo; echo '[press any key]'; read -rk1"
+}
+
+# q <N> <message> — queue a message to agent N without switching to it
+# Single-digit responses (1/2/3) skip Enter — Claude Code approval prompts
+# select immediately on keypress; sending Enter would trigger an extra action.
+q() {
+  local slot=${1:?"Usage: q <slot> <message>"}
+  shift
+  echo "$(date +%s) human-q agents:${slot}" >> "$HOME/.tmux/apm.log"
+  if [[ "$*" =~ ^[0-9]$ ]]; then
+    tmux send-keys -t "agents:${slot}" "$*"
+  else
+    tmux send-keys -t "agents:${slot}" "$*" Enter
+  fi
+}

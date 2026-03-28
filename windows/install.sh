@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Copies config files from this repo into their expected locations.
+# Run from the repo root inside MSYS2: ./install.sh
+#
+# IMPORTANT: On MSYS2, $HOME is /home/<user> (C:\msys64\home\<user>),
+# NOT /c/Users/<user>. This script installs into MSYS2's $HOME.
+
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+echo "Installing to HOME=$HOME"
+
+# tmux config
+cp "$SCRIPT_DIR/tmux.conf" "$HOME/.tmux.conf"
+echo "  -> ~/.tmux.conf"
+
+# tmux scripts
+mkdir -p "$HOME/.tmux"
+for script in "$SCRIPT_DIR"/tmux-scripts/*.sh; do
+  cp "$script" "$HOME/.tmux/$(basename "$script")"
+  chmod +x "$HOME/.tmux/$(basename "$script")"
+done
+echo "  -> ~/.tmux/*.sh"
+
+# Claude Code settings
+CLAUDE_DIR="$HOME/.claude"
+# Also try Windows-side claude dir
+WIN_CLAUDE_DIR="/c/Users/$USER/.claude"
+for dir in "$CLAUDE_DIR" "$WIN_CLAUDE_DIR"; do
+  if [ -d "$dir" ]; then
+    if [ -f "$dir/settings.json" ]; then
+      echo "  !! $dir/settings.json exists — compare with claude-settings.json manually"
+    else
+      cp "$SCRIPT_DIR/claude-settings.json" "$dir/settings.json"
+      echo "  -> $dir/settings.json"
+    fi
+  fi
+done
+
+# Shell functions
+cp "$SCRIPT_DIR/bashrc" "$HOME/.bashrc"
+echo "  -> ~/.bashrc"
+
+# Ensure .bash_profile sources .bashrc (MSYS2 uses login shells)
+if ! grep -qF '.bashrc' "$HOME/.bash_profile" 2>/dev/null; then
+  echo 'if [ -f "$HOME/.bashrc" ]; then source "$HOME/.bashrc"; fi' >> "$HOME/.bash_profile"
+  echo "  -> added .bashrc sourcing to ~/.bash_profile"
+fi
+
+echo ""
+echo "Done. Open a new MSYS2 terminal or run: source ~/.bashrc"
+echo "Then type 'work' to start tmux."
