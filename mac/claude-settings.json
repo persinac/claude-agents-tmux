@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$TMUX_PANE\" ] && tmux set-window-option -t \"$TMUX_PANE\" @waiting 1 && tmux set-option -w -t \"$TMUX_PANE\" @wait_since \"$(date +%s)\" && WNAME=$(tmux display-message -t \"$TMUX_PANE\" -p '#W') && \"$HOME/.tmux/notify.sh\" \"Claude Code\" \"Agent $WNAME waiting for input\" && echo \"$(date +%s) wait $TMUX_PANE\" >> \"$HOME/.tmux/apm.log\"; true"
+            "command": "$HOME/.tmux/hook-stop.sh; true"
           }
         ]
       }
@@ -17,7 +17,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$TMUX_PANE\" ] && tmux set-window-option -t \"$TMUX_PANE\" @waiting 0 && tmux set-option -wu -t \"$TMUX_PANE\" @wait_since && echo \"$(date +%s) agent $TMUX_PANE\" >> \"$HOME/.tmux/apm.log\"; true"
+            "command": "$HOME/.tmux/hook-pretooluse.sh; true"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.tmux/hook-notification.sh; true"
           }
         ]
       }
@@ -44,7 +55,8 @@
       "Bash(echo *)",
       "Bash(env)",
       "Bash(grep *)",
-      "Bash(uv run *)"
+      "Bash(uv run *)",
+      "Bash($HOME/.tmux/agent-send.sh *)"
     ]
   }
 }
