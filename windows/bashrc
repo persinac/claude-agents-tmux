@@ -19,6 +19,64 @@ work() {
   fi
 }
 
+# wt — manage agent worktrees
+wt() {
+  local REPO_DIR="${REPO_DIR:-/c/projects}"
+  local WT_DIR="$REPO_DIR/.worktrees"
+  case "${1:-ls}" in
+    ls)
+      if [ -d "$WT_DIR" ] && [ "$(ls -A "$WT_DIR" 2>/dev/null)" ]; then
+        echo "Active worktrees:"
+        for d in "$WT_DIR"/*/; do
+          [ -d "$d" ] || continue
+          local name=$(basename "$d")
+          local branch="${name##*--}"
+          local repo="${name%%--*}"
+          echo "  $name  (repo: ${repo//_//}, branch: $branch)"
+        done
+      else
+        echo "No worktrees"
+      fi
+      ;;
+    rm)
+      local name="${2:?"Usage: wt rm <name>"}"
+      local wt_path="$WT_DIR/$name"
+      [ -d "$wt_path" ] || { echo "Not found: $name"; return 1; }
+      local repo="${name%%--*}"
+      local repo_path=""
+      for candidate in "${repo//_//}" "$repo"; do
+        [ -d "$REPO_DIR/$candidate/.git" ] || [ -f "$REPO_DIR/$candidate/.git" ] && { repo_path="$REPO_DIR/$candidate"; break; }
+      done
+      [ -z "$repo_path" ] && { echo "Can't find repo for $name"; return 1; }
+      git -C "$repo_path" worktree remove "$wt_path" && echo "Removed $name" \
+        || echo "Failed (uncommitted changes?). Use: git -C $repo_path worktree remove --force $wt_path"
+      ;;
+    clean)
+      local active_paths
+      active_paths=$(tmux list-panes -a -F '#{pane_current_path}' 2>/dev/null)
+      local cleaned=0
+      for d in "$WT_DIR"/*/; do
+        [ -d "$d" ] || continue
+        d="${d%/}"
+        local name=$(basename "$d")
+        if ! echo "$active_paths" | grep -qF "$d"; then
+          local repo="${name%%--*}"
+          for candidate in "${repo//_//}" "$repo"; do
+            if [ -d "$REPO_DIR/$candidate/.git" ] || [ -f "$REPO_DIR/$candidate/.git" ]; then
+              git -C "$REPO_DIR/$candidate" worktree remove "$d" 2>/dev/null && { echo "Cleaned: $name"; ((cleaned++)); }
+              break
+            fi
+          done
+        fi
+      done
+      echo "$cleaned worktree(s) cleaned"
+      ;;
+    *)
+      echo "Usage: wt [ls|rm <name>|clean]"
+      ;;
+  esac
+}
+
 # claude-init — scaffold a CLAUDE.md in the current repo from the template
 claude-init() {
   local template="/c/projects/agent-orchestration/CLAUDE.md.template"
