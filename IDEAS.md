@@ -9,14 +9,19 @@
 
 ## Medium effort — multiplier effects
 
-5. **Session templates** — predefined layouts for common workflows (e.g., `work-stack frontend backend tests` spins up 3 agents in specific repos). One command to set up a whole workstream
-6. **Git worktree integration** — auto-create worktrees when spawning agents in the same repo, so two agents can work on different branches without conflicts
-7. **Agent summary on peek** — enhance `v()` to parse the last Claude output and show a one-line status (e.g., "editing src/auth.ts", "waiting: approve file write?", "running tests") instead of raw terminal output
-8. **Stuck agent detection** — if an agent's been "running" (green) for >10min with no tool use logged, flag it yellow. Means it's probably hung or in a loop
+| # | Priority | Idea | Status |
+|---|----------|------|--------|
+| 5 | 8 | **Session templates** — predefined layouts for common workflows (e.g., `work-stack frontend backend tests`). One command to set up a whole workstream | |
+| 6 | 1 | **Git worktree integration** — auto-create worktrees when spawning agents in the same repo, so two agents can work on different branches without conflicts | |
+| 7 | 5 | **Agent summary on peek** — enhance `v()` to parse the last Claude output and show a one-line status instead of raw terminal output | |
+| 8 | 5 | **Stuck agent detection** — if an agent's been "running" (green) for >10min with no tool use logged, flag it yellow | |
+| 9 | — | **Agent-to-agent messaging** — `/msg <slot> <message>` slash command + `agent-send.sh` script | testing |
 
 ## Bigger bets
 
-9. **Agent handoff / chaining** — when agent 2 finishes, auto-send its summary to agent 3. Pipeline workflows like: agent 1 writes code → agent 2 reviews → agent 3 runs tests
-10. **Searchable history** — structured log (JSON instead of flat APM log) capturing what each agent worked on, which files it touched, outcome. Queryable with `jq`
-11. **Cost/token dashboard** — track token usage per agent per session alongside APM
-12. **Auto-routing** — when an agent goes red, automatically `v` it in a small persistent pane at the bottom, so you see what it needs without manual peeking
+| # | Priority | Idea | Status |
+|---|----------|------|--------|
+| 10 | 3 | **Agent handoff / chaining** — when agent 2 finishes, auto-send its summary to agent 3. Pipeline: write → review → test | |
+| 11 | 2 | **Searchable history** — structured log (JSON instead of flat APM log) capturing what each agent worked on, which files it touched, outcome. Queryable with `jq` | |
+| 12 | 5 | **Cost/token dashboard** — track token usage per agent per session alongside APM | |
+| 13 | 8 | **Auto-routing** — when an agent goes red, automatically `v` it in a small persistent pane at the bottom | |
