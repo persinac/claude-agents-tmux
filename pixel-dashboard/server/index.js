@@ -250,11 +250,13 @@ function poll() {
     if (!existing) {
       // New agent
       agents.set(id, { name: win.name, waiting: win.waiting, path: win.path });
+      console.log(`[Poll] New agent ${id} (${win.name}) waiting="${win.waiting}" → ${status}`);
       broadcast({ type: 'agentCreated', id, folderName: win.name });
       broadcastStatus(id, status);
     } else {
       // Status changed?
       if (existing.waiting !== win.waiting) {
+        console.log(`[Poll] Agent ${id} (${win.name}) waiting="${existing.waiting}" → "${win.waiting}" (${status})`);
         existing.waiting = win.waiting;
         broadcastStatus(id, status);
       }

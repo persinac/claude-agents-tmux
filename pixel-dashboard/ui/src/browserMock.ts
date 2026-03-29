@@ -280,11 +280,17 @@ export function dispatchMockMessages(): void {
   connectToBridge(dispatch);
 }
 
+let bridgeWs: WebSocket | null = null;
+
 function connectToBridge(dispatch: (data: unknown) => void): void {
+  // Prevent duplicate connections (React strict mode calls effects twice)
+  if (bridgeWs && bridgeWs.readyState <= 1) return;
+
   const wsUrl = `ws://${window.location.hostname || 'localhost'}:8420`;
   console.log(`[Bridge] Connecting to ${wsUrl}...`);
 
   const ws = new WebSocket(wsUrl);
+  bridgeWs = ws;
 
   ws.onopen = () => {
     console.log('[Bridge] Connected to tmux bridge server');
@@ -293,6 +299,7 @@ function connectToBridge(dispatch: (data: unknown) => void): void {
   ws.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data as string);
+      console.log('[Bridge]', msg.type, msg);
       dispatch(msg);
     } catch {
       // ignore malformed messages
