@@ -59,10 +59,6 @@ $TMUX_BIN set-window-option -t "$PANE" @waiting 1 2>/dev/null
 $TMUX_BIN set-option -w -t "$PANE" @wait_since "$NOW" 2>/dev/null
 log_debug "set @waiting=1 on $PANE ($WNAME)"
 
-# Toast notification
-NOTIFY="$HOME_DIR/.tmux/notify.sh"
-[ -x "$NOTIFY" ] && "$NOTIFY" "Claude Code" "Agent ${WNAME:-?} needs input ($NTYPE)"
-
 # APM log
 echo "$NOW wait $PANE" >> "$LOG" 2>/dev/null
 

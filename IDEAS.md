@@ -2,10 +2,10 @@
 
 ## High impact — low effort
 
-1. **Windows toast notifications** — replace the `\007` bell with PowerShell `BurntToast` so you get native Windows notifications when agents need you, even when MSYS2 isn't focused
-2. **Batch approve/reject** — a `qa` (queue-all) function that sends the same response to all waiting agents at once (e.g., `qa 1` to approve everything)
-3. **Wait duration in status bar** — show how long each red window has been waiting, not just that it's waiting. Helps triage which agent to unblock first
-4. **CLAUDE.md files per repo** — project-specific instructions so each agent already knows the repo's conventions, test commands, etc.
+1. ~~**Windows toast notifications**~~ — removed; red status bar indicator (item 3) is sufficient
+2. **Batch approve/reject** — done: `qa` function (e.g., `qa 1` to approve all waiting agents)
+3. **Wait duration in status bar** — done: three-state color system (green=working, grey=idle, red+timer=needs input) via `PreToolUse`, `Stop`, and `Notification` hooks
+4. **CLAUDE.md files per repo** — done: `CLAUDE.md.template` + `claude-init` command to scaffold
 
 ## Medium effort — multiplier effects
 
