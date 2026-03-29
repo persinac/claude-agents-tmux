@@ -75,6 +75,22 @@ function broadcast(msg) {
   }
 }
 
+function broadcastStatus(id, status) {
+  if (status === 'permission') {
+    // Pixel-agents UI expects agentToolPermission for the amber "..." bubble
+    broadcast({ type: 'agentToolPermission', id });
+    broadcast({ type: 'agentStatus', id, status: 'active' });
+  } else if (status === 'active') {
+    // Clear permission bubble when agent resumes
+    broadcast({ type: 'agentToolPermissionClear', id });
+    broadcast({ type: 'agentStatus', id, status: 'active' });
+  } else {
+    // 'waiting' = idle/done → character goes idle, stops typing
+    broadcast({ type: 'agentToolsClear', id });
+    broadcast({ type: 'agentStatus', id, status });
+  }
+}
+
 // ── JSONL transcript reading ─────────────────────────────────────
 
 function findTranscriptFile(agentPath) {
@@ -235,12 +251,12 @@ function poll() {
       // New agent
       agents.set(id, { name: win.name, waiting: win.waiting, path: win.path });
       broadcast({ type: 'agentCreated', id, folderName: win.name });
-      broadcast({ type: 'agentStatus', id, status });
+      broadcastStatus(id, status);
     } else {
       // Status changed?
       if (existing.waiting !== win.waiting) {
         existing.waiting = win.waiting;
-        broadcast({ type: 'agentStatus', id, status });
+        broadcastStatus(id, status);
       }
 
       // Name changed?
