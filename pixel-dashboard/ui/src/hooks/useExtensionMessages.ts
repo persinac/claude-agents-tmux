@@ -272,6 +272,12 @@ export function useExtensionMessages(
           os.showWaitingBubble(id);
           playDoneSound();
         }
+      } else if (msg.type === 'agentMessage') {
+        // Agent-to-agent message — show thought bubble on sender and receiver
+        const fromId = msg.fromId as number;
+        const toId = msg.toId as number;
+        os.showWaitingBubble(fromId);
+        os.showWaitingBubble(toId);
       } else if (msg.type === 'agentToolPermission') {
         const id = msg.id as number;
         setAgentTools((prev) => {

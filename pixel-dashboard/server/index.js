@@ -171,7 +171,23 @@ function processTranscriptRecords(agentId, records) {
           } else if (toolName === 'Edit' && input.file_path) {
             status = `Editing ${basename(input.file_path)}`;
           } else if (toolName === 'Bash' && input.command) {
-            status = `Running: ${input.command.slice(0, 30)}`;
+            // Detect agent-to-agent messaging
+            if (input.command.includes('agent-send.sh')) {
+              const match = input.command.match(/agent-send\.sh\s+(\d+)\s+(.*)/);
+              if (match) {
+                const targetSlot = parseInt(match[1], 10);
+                const message = match[2].slice(0, 50);
+                status = `Messaging agent ${targetSlot}`;
+                broadcast({
+                  type: 'agentMessage',
+                  fromId: agentId,
+                  toId: targetSlot,
+                  message
+                });
+              }
+            } else {
+              status = `Running: ${input.command.slice(0, 30)}`;
+            }
           } else if (toolName === 'Grep' && input.pattern) {
             status = `Searching: ${input.pattern.slice(0, 30)}`;
           } else if (toolName === 'Glob' && input.pattern) {
