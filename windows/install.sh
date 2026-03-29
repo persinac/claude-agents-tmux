@@ -47,6 +47,30 @@ if ! grep -qF '.bashrc' "$HOME/.bash_profile" 2>/dev/null; then
   echo "  -> added .bashrc sourcing to ~/.bash_profile"
 fi
 
+# Create wrapper scripts for Windows tools in ~/.local/bin
+# NOTE: MSYS2 symlinks don't work with Windows .exe files — use wrappers instead.
+# NOTE: Do NOT add "Program Files" paths to PATH directly — breaks fzf in tmux.
+mkdir -p "$HOME/.local/bin"
+WRAPPERS=(
+  "aws:/c/Program Files/Amazon/AWSCLIV2/aws.exe"
+  "git:/c/Program Files/Git/cmd/git.exe"
+  "kubectl:/c/ProgramData/chocolatey/bin/kubectl.exe"
+  "uv:/c/Users/$USER/.local/bin/uv.exe"
+  "uvx:/c/Users/$USER/.local/bin/uvx.exe"
+  "task:/c/Users/$USER/scoop/shims/task.exe"
+)
+for entry in "${WRAPPERS[@]}"; do
+  name="${entry%%:*}"
+  exe="${entry#*:}"
+  if [ -f "$exe" ]; then
+    printf '#!/usr/bin/env bash\nexec "%s" "$@"\n' "$exe" > "$HOME/.local/bin/$name"
+    chmod +x "$HOME/.local/bin/$name"
+    echo "  -> ~/.local/bin/$name (wrapper for $exe)"
+  else
+    echo "  !! $exe not found, skipping $name"
+  fi
+done
+
 echo ""
 echo "Done. Open a new MSYS2 terminal or run: source ~/.bashrc"
 echo "Then type 'work' to start tmux."
