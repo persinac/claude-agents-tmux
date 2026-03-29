@@ -10,12 +10,12 @@
 
 import { WebSocketServer } from 'ws';
 import { execSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, statSync, watch } from 'fs';
 import { join, basename } from 'path';
 import { homedir } from 'os';
 
 const PORT = parseInt(process.env.PORT || '8420', 10);
-const POLL_MS = 500;
+const POLL_MS = 100;  // fast baseline poll
 const TMUX_SESSION = process.env.TMUX_SESSION || 'agents';
 
 // Platform detection
@@ -325,5 +325,23 @@ console.log(`  WebSocket: ws://localhost:${PORT}`);
 console.log(`  Polling tmux session: "${TMUX_SESSION}" every ${POLL_MS}ms`);
 console.log(`  Transcripts: ${CLAUDE_PROJECTS_DIR}`);
 
+// Baseline poll interval
 setInterval(poll, POLL_MS);
-poll(); // initial poll
+poll();
+
+// Watch apm.log for immediate updates when hooks fire
+const APM_LOG = join(HOME, '.tmux', 'apm.log');
+let watchDebounce = null;
+try {
+  watch(APM_LOG, () => {
+    // Debounce rapid writes (hooks fire in bursts)
+    if (watchDebounce) return;
+    watchDebounce = setTimeout(() => {
+      watchDebounce = null;
+      poll();
+    }, 50);
+  });
+  console.log(`  Watching: ${APM_LOG} (event-driven updates)`);
+} catch {
+  console.log(`  Note: fs.watch on apm.log unavailable, using polling only`);
+}
