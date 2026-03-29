@@ -1,0 +1,11 @@
+{
+  "name": "pixel-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "setup": "cd ui && npm install && cd ../server && npm install",
+    "dev": "node scripts/dev.js",
+    "server": "cd server && node index.js",
+    "ui": "cd ui && npm run dev"
+  }
+}
