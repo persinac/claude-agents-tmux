@@ -317,6 +317,10 @@ export function updateCharacter(
 export function getCharacterSprite(ch: Character, sprites: CharacterSprites): SpriteData {
   switch (ch.state) {
     case CharacterState.TYPE:
+      // Inactive characters "rest" at their seat — show idle pose, not typing
+      if (!ch.isActive) {
+        return sprites.walk[ch.dir][1];
+      }
       if (isReadingTool(ch.currentTool)) {
         return sprites.reading[ch.dir][ch.frame % 2];
       }
