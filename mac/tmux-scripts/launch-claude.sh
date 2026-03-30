@@ -2,7 +2,7 @@
 # Fuzzy repo picker with git worktree support.
 # If the selected repo already has an agent, offers to create a worktree.
 
-REPO_DIR="${REPO_DIR:-$HOME/garner/repos}"
+REPO_DIR="${REPO_DIR:-$HOME/repos}"
 WT_DIR="$REPO_DIR/.worktrees"
 
 # Build combined list: repos + existing worktrees

@@ -3,7 +3,7 @@
 # Usage: worktree-cleanup.sh <pane_current_path>
 
 PANE_PATH="$1"
-REPO_DIR="${REPO_DIR:-$HOME/garner/repos}"
+REPO_DIR="${REPO_DIR:-$HOME/repos}"
 WT_DIR="$REPO_DIR/.worktrees"
 
 [ -z "$PANE_PATH" ] && exit 0

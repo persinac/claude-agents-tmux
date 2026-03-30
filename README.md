@@ -127,7 +127,7 @@ The `claude-settings.json` configures two hooks:
 |---|---|---|---|
 | Shell | zsh | bash | bash |
 | Home | `~/` | `/home/<user>` (MSYS2) | `~/` |
-| Repo dir | `~/garner/repos` | `/c/projects` | configurable |
+| Repo dir | `~/repos` | `/c/projects` | configurable |
 | `date` | BSD (`-v0H`) | GNU (`-d "today..."`) | GNU |
 | `read` key | `-rk1` (zsh) | `-rsn1` (bash) | `-rsn1` |
 | Notifications | `osascript` | PowerShell toast | `notify-send` |

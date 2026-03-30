@@ -11,7 +11,7 @@ work() {
 
 # wt — manage agent worktrees
 wt() {
-  local REPO_DIR="${REPO_DIR:-$HOME/garner/repos}"
+  local REPO_DIR="${REPO_DIR:-$HOME/repos}"
   local WT_DIR="$REPO_DIR/.worktrees"
   case "${1:-ls}" in
     ls)
