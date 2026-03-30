@@ -1,4 +1,4 @@
-# Agent Orchestration Setup (tmux + Claude Code)
+# claude-agents-tmux
 
 RTS-inspired multi-agent orchestration — manage multiple Claude Code agents across repos
 without full context switches, using tmux as the orchestration layer.
