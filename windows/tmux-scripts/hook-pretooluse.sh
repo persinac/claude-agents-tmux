@@ -49,6 +49,7 @@ fi
 NOW=$(date +%s)
 
 $TMUX_BIN set-window-option -t "$PANE" @waiting 0 2>/dev/null
+$TMUX_BIN set-window-option -t "$PANE" @last_tool "$NOW" 2>/dev/null
 $TMUX_BIN set-option -wu -t "$PANE" @wait_since 2>/dev/null
 
 echo "$NOW agent $PANE" >> "$LOG" 2>/dev/null

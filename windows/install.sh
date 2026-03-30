@@ -53,6 +53,9 @@ fi
 mkdir -p "$HOME/.local/bin"
 WRAPPERS=(
   "aws:/c/Program Files/Amazon/AWSCLIV2/aws.exe"
+  "docker:/c/Program Files/Docker/Docker/resources/bin/docker.exe"
+  "docker-compose:/c/Program Files/Docker/Docker/resources/bin/docker-compose.exe"
+  "docker-credential-wincred:/c/Program Files/Docker/Docker/resources/bin/docker-credential-wincred.exe"
   "git:/c/Program Files/Git/cmd/git.exe"
   "kubectl:/c/ProgramData/chocolatey/bin/kubectl.exe"
   "uv:/c/Users/$USER/.local/bin/uv.exe"

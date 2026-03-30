@@ -4,6 +4,7 @@
 #
 # @waiting states:
 #   0 = actively working (PreToolUse fired) → GREEN
+#       (but YELLOW + timer if no tool use in >10min — stuck agent)
 #   1 = needs user input (Notification fired) → RED + timer
 #   2 = finished/idle (Stop fired)           → GREY
 #   unset = fresh window, no hooks fired yet → GREEN if claude running, else GREY
@@ -39,9 +40,24 @@ if [ "$WAITING" = "1" ]; then
   exit 0
 fi
 
-# State 2: GREEN — claude is actively working
+# State 2: GREEN — claude is actively working (or YELLOW if stuck)
 if [ "$WAITING" = "0" ] || { $IS_CLAUDE && [ -z "$WAITING" ]; }; then
-  if [ "$IS_CURRENT" = "current" ]; then
+  STUCK_THRESHOLD=600  # 10 minutes
+  LAST_TOOL=$(tmux show-option -wv -t "$WINDOW" @last_tool 2>/dev/null)
+  IS_STUCK=false
+  if [ -n "$LAST_TOOL" ]; then
+    ELAPSED=$(( $(date +%s) - LAST_TOOL ))
+    [ "$ELAPSED" -gt "$STUCK_THRESHOLD" ] && IS_STUCK=true
+  fi
+
+  if $IS_STUCK; then
+    DUR=$(format_dur "$ELAPSED")
+    if [ "$IS_CURRENT" = "current" ]; then
+      printf "#[fg=#f9e2af bold] %s:%s(%s) " "$INDEX" "$NAME" "$DUR"
+    else
+      printf "#[fg=#f9e2af] %s:%s(%s) " "$INDEX" "$NAME" "$DUR"
+    fi
+  elif [ "$IS_CURRENT" = "current" ]; then
     printf "#[fg=#a6e3a1 bold] %s:%s " "$INDEX" "$NAME"
   else
     printf "#[fg=#a6e3a1] %s:%s " "$INDEX" "$NAME"

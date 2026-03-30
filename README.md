@@ -7,36 +7,20 @@ Multi-platform: macOS, Windows (MSYS2), Linux.
 
 ## Install
 
-Each platform has its own directory with platform-specific configs:
-
-### macOS
+One command — detects your OS, installs system deps, links configs, and sets up the pixel dashboard:
 
 ```bash
-brew install tmux fzf
 cd /path/to/agent-orchestration
-./mac/install.sh
+./install.sh            # full install (deps + configs + dashboard)
+./install.sh --no-ui    # skip pixel dashboard setup
 ```
 
-### Windows (MSYS2)
+The installer handles macOS (Homebrew), Windows (MSYS2/pacman), and Linux (apt/dnf/pacman).
 
-1. Install [MSYS2](https://www.msys2.org/) (default: `C:\msys64`)
-2. In MSYS2 terminal:
+> **Windows:** Requires [MSYS2](https://www.msys2.org/) (default: `C:\msys64`). Run inside an MSYS2 terminal.
+> MSYS2's `$HOME` is `/home/<user>` (`C:\msys64\home\<user>`), not `/c/Users/<user>`.
 
-```bash
-pacman -S tmux mingw-w64-x86_64-fzf
-cd /c/projects/agent-orchestration
-./windows/install.sh
-```
-
-> **Note:** MSYS2's `$HOME` is `/home/<user>` (`C:\msys64\home\<user>`), not `/c/Users/<user>`.
-
-### Linux
-
-```bash
-sudo apt install tmux fzf   # or your distro's package manager
-cd /path/to/agent-orchestration
-./linux/install.sh           # not yet implemented — see linux/README.md
-```
+Platform-specific install scripts (`mac/install.sh`, `windows/install.sh`) still work standalone if you prefer.
 
 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) must be installed and on `PATH` for all platforms.
 
@@ -60,9 +44,9 @@ work query      # attach/create "query" session
 
 | Command / Hotkey | Action |
 |---|---|
-| `v 2` | Quick peek at agent 2 (floating overlay, last 30 lines) |
+| `v 2` | Quick peek at agent 2 (status summary + last output) |
 | `ctrl+a → A` | APM dashboard popup |
-| Status bar | Grey = idle, Green = running, Red = needs input |
+| Status bar | Grey = idle, Green = running, Yellow = stuck (>10min), Red = needs input |
 
 ### Send commands without switching
 
@@ -114,8 +98,10 @@ The `claude-settings.json` configures two hooks:
 ## Files
 
 ```
+├── install.sh               # unified installer (detects OS, installs everything)
 ├── CLAUDE.md.template       # scaffold template for per-repo CLAUDE.md
 ├── IDEAS.md                 # roadmap & feature ideas
+├── searchable-history-design.md  # design doc for #11 (searchable history)
 ├── mac/
 │   ├── install.sh           # symlinks into ~/
 │   ├── zshrc                # shell functions (zsh)
@@ -128,6 +114,9 @@ The `claude-settings.json` configures two hooks:
 │   ├── tmux.conf
 │   ├── claude-settings.json
 │   └── tmux-scripts/        # Windows-specific (PowerShell toast, GNU date)
+├── pixel-dashboard/         # animated pixel art agent dashboard
+│   ├── server/              # WebSocket bridge (tmux → browser)
+│   └── ui/                  # React + Vite frontend
 └── linux/
     └── README.md            # placeholder — not yet implemented
 ```

@@ -101,12 +101,12 @@ qa() {
   echo "Sent to $sent waiting agent(s)"
 }
 
-# v <N> — quick view: float an overlay showing the last 30 lines of agent N
+# v <N> — quick view: float an overlay with status summary + last output of agent N
 v() {
   local slot=${1:?"Usage: v <slot>"}
   echo "$(date +%s) human-v agents:${slot}" >> "$HOME/.tmux/apm.log"
-  tmux display-popup -E -w 100 -h 32 \
-    "tmux capture-pane -t agents:${slot} -p | tail -30; echo; echo '[press any key]'; read -rk1"
+  tmux display-popup -E -w 100 -h 34 \
+    "$HOME/.tmux/peek-summary.sh ${slot}"
 }
 
 # q <N> <message> — queue a message to agent N without switching to it
