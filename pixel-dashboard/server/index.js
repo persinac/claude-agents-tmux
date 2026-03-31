@@ -37,6 +37,18 @@ const transcriptState = new Map();
 /** @type {Set<import('ws').WebSocket>} */
 const clients = new Set();
 
+// Message types that external bridge clients may send to be relayed to all other
+// connected clients. Bridges connect as normal WebSocket clients and push these to
+// feed agents from non-tmux runtimes (remote runners, cloud jobs, etc.).
+const RELAY_TYPES = new Set([
+  'agentCreated', 'agentClosed', 'agentStatus',
+  'agentToolStart', 'agentToolDone', 'agentToolsClear',
+  'agentToolPermission', 'agentToolPermissionClear', 'agentMessage',
+]);
+
+/** @type {Map<number, {name: string, status: string, lastTool?: {toolId: string, status: string}}>} */
+const relayAgents = new Map();
+
 let nextToolId = 1;
 
 // ── tmux polling ─────────────────────────────────────────────────
@@ -316,11 +328,58 @@ wss.on('connection', (ws) => {
     }
   }
 
+  // Catch up new client on relay agents from external bridge clients
+  for (const [id, agent] of relayAgents) {
+    ws.send(JSON.stringify({ type: 'agentCreated', id, folderName: agent.name, palette: agent.palette }));
+    if (agent.status === 'permission') {
+      ws.send(JSON.stringify({ type: 'agentToolPermission', id }));
+      ws.send(JSON.stringify({ type: 'agentStatus', id, status: 'active' }));
+    } else {
+      ws.send(JSON.stringify({ type: 'agentStatus', id, status: agent.status }));
+    }
+    if (agent.lastTool && agent.status !== 'waiting') {
+      ws.send(JSON.stringify({ type: 'agentToolStart', id, ...agent.lastTool }));
+    }
+  }
+
   ws.on('message', (raw) => {
-    // Handle messages from webview (saveAgentSeats, saveLayout, etc.)
     try {
       const msg = JSON.parse(raw.toString());
-      console.log('[Webview→Server]', msg.type);
+
+      if (RELAY_TYPES.has(msg.type)) {
+        // Update relay state so future clients get an accurate catch-up
+        switch (msg.type) {
+          case 'agentCreated':
+            relayAgents.set(msg.id, { name: msg.folderName ?? String(msg.id), status: 'active', palette: msg.palette });
+            break;
+          case 'agentClosed':
+            relayAgents.delete(msg.id);
+            break;
+          case 'agentStatus': {
+            const a = relayAgents.get(msg.id);
+            if (a) a.status = msg.status;
+            break;
+          }
+          case 'agentToolStart': {
+            const a = relayAgents.get(msg.id);
+            if (a) a.lastTool = { toolId: msg.toolId, status: msg.status };
+            break;
+          }
+          case 'agentToolsClear': {
+            const a = relayAgents.get(msg.id);
+            if (a) a.lastTool = undefined;
+            break;
+          }
+        }
+        // Relay to every other connected client
+        const data = JSON.stringify(msg);
+        for (const client of clients) {
+          if (client !== ws && client.readyState === 1) client.send(data);
+        }
+        return;
+      }
+
+      console.log('[Client→Server]', msg.type);
     } catch {
       // ignore
     }
