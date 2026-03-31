@@ -38,7 +38,7 @@ if [[ "$selected" == "[wt] "* ]]; then
   wt_name="${selected#\[wt\] }"
   working_dir="$WT_DIR/$wt_name"
   window_name="${wt_name/--//}"  # repo--branch → repo/branch
-  tmux new-window -d -n "$window_name" -c "$working_dir" "claude"
+  tmux new-window -d -n "$window_name" -c "$working_dir" "$HOME/.tmux/open-claude.sh"
   exit 0
 fi
 
@@ -49,7 +49,7 @@ conflict=$(tmux list-panes -a -F '#{pane_current_path}' 2>/dev/null \
 
 if [ -z "$conflict" ]; then
   # No conflict — launch normally
-  tmux new-window -d -n "$selected" -c "$repo_path" "claude"
+  tmux new-window -d -n "$selected" -c "$repo_path" "$HOME/.tmux/open-claude.sh"
   exit 0
 fi
 
@@ -79,4 +79,4 @@ else
 fi
 
 window_name="${selected//\//_}/$branch"
-tmux new-window -d -n "$window_name" -c "$wt_path" "claude"
+tmux new-window -d -n "$window_name" -c "$wt_path" "$HOME/.tmux/open-claude.sh"

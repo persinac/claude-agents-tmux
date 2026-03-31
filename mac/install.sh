@@ -18,9 +18,16 @@ ENV_FILE="$HOME/.tmux/env.sh"
 REPO_DIR_DEFAULT="$HOME/repos"
 if [ ! -f "$ENV_FILE" ]; then
   echo "REPO_DIR=\"\${REPO_DIR:-$REPO_DIR_DEFAULT}\"" > "$ENV_FILE"
-  echo "Created ~/.tmux/env.sh (edit REPO_DIR if your repos live elsewhere)"
+  echo "NOTES_DIR=\"\${NOTES_DIR:-\$HOME/garner/notes}\"" >> "$ENV_FILE"
+  echo "Created ~/.tmux/env.sh (edit REPO_DIR/NOTES_DIR if your paths differ)"
 else
-  echo "~/.tmux/env.sh already exists — verify REPO_DIR is correct"
+  # Add NOTES_DIR if missing
+  if ! grep -q "NOTES_DIR" "$ENV_FILE"; then
+    echo "NOTES_DIR=\"\${NOTES_DIR:-\$HOME/garner/notes}\"" >> "$ENV_FILE"
+    echo "Added NOTES_DIR to ~/.tmux/env.sh"
+  else
+    echo "~/.tmux/env.sh already exists — verify REPO_DIR/NOTES_DIR are correct"
+  fi
 fi
 
 mkdir -p "$HOME/.claude"
