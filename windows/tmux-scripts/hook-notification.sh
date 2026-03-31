@@ -16,9 +16,10 @@ CWD=$(echo "$INPUT" | sed -n 's/.*"cwd" *: *"\([^"]*\)".*/\1/p' | head -1)
 NTYPE=$(echo "$INPUT" | sed -n 's/.*"notification_type" *: *"\([^"]*\)".*/\1/p' | head -1)
 log_debug "type: $NTYPE, cwd: $CWD"
 
-# Only go red for permission prompts and similar input-needed notifications
+# Only go red for genuine approval/input requests.
+# idle_prompt fires when Claude finishes a turn — Stop hook already handles that (→ @waiting=2).
 case "$NTYPE" in
-  permission_prompt|idle_prompt|elicitation_dialog) ;;
+  permission_prompt|elicitation_dialog) ;;
   *) log_debug "ignoring notification type: $NTYPE"; exit 0 ;;
 esac
 

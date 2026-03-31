@@ -9,14 +9,63 @@ ln -sf "$SCRIPT_DIR/tmux.conf" "$HOME/.tmux.conf"
 
 mkdir -p "$HOME/.tmux"
 for script in "$SCRIPT_DIR"/tmux-scripts/*.sh; do
+  chmod +x "$script"
   ln -sf "$script" "$HOME/.tmux/$(basename "$script")"
 done
 
-mkdir -p "$HOME/.claude"
-if [ -f "$HOME/.claude/settings.json" ]; then
-  echo "~/.claude/settings.json already exists — compare with claude-settings.json manually"
+# Write machine-specific env (sourced by tmux scripts at runtime)
+ENV_FILE="$HOME/.tmux/env.sh"
+REPO_DIR_DEFAULT="$HOME/repos"
+if [ ! -f "$ENV_FILE" ]; then
+  echo "REPO_DIR=\"\${REPO_DIR:-$REPO_DIR_DEFAULT}\"" > "$ENV_FILE"
+  echo "Created ~/.tmux/env.sh (edit REPO_DIR if your repos live elsewhere)"
 else
-  ln -sf "$SCRIPT_DIR/claude-settings.json" "$HOME/.claude/settings.json"
+  echo "~/.tmux/env.sh already exists — verify REPO_DIR is correct"
+fi
+
+mkdir -p "$HOME/.claude"
+SETTINGS="$HOME/.claude/settings.json"
+TEMPLATE="$SCRIPT_DIR/claude-settings.json"
+
+if [ ! -f "$SETTINGS" ]; then
+  cp "$TEMPLATE" "$SETTINGS"
+  echo "Created ~/.claude/settings.json from template"
+else
+  # Back up first
+  cp "$SETTINGS" "${SETTINGS}.bak"
+
+  # If it's a symlink, unlink it so we can write a real merged file
+  if [ -L "$SETTINGS" ]; then
+    cp --remove-destination "$(readlink "$SETTINGS")" "$SETTINGS"
+  fi
+
+  # Smart merge: add repo hooks (dedup by command) + union permissions
+  node - "$SETTINGS" "$TEMPLATE" <<'EOF'
+const [,, existingPath, templatePath] = process.argv;
+const existing = JSON.parse(require('fs').readFileSync(existingPath, 'utf8'));
+const template = JSON.parse(require('fs').readFileSync(templatePath, 'utf8'));
+
+// Merge hooks: for each event in template, append entries whose command isn't already present
+for (const [event, entries] of Object.entries(template.hooks ?? {})) {
+  existing.hooks ??= {};
+  existing.hooks[event] ??= [];
+  for (const entry of entries) {
+    const cmd = entry.hooks?.[0]?.command;
+    const alreadyPresent = existing.hooks[event].some(e => e.hooks?.[0]?.command === cmd);
+    if (!alreadyPresent) existing.hooks[event].push(entry);
+  }
+}
+
+// Union permissions.allow
+const existingPerms = existing.permissions?.allow ?? [];
+const templatePerms = template.permissions?.allow ?? [];
+existing.permissions ??= {};
+existing.permissions.allow = [...new Set([...existingPerms, ...templatePerms])];
+
+require('fs').writeFileSync(existingPath, JSON.stringify(existing, null, 2) + '\n');
+EOF
+
+  echo "Merged claude-settings.json into ~/.claude/settings.json (backup at settings.json.bak)"
 fi
 
 # Append zshrc sourcing if not already present

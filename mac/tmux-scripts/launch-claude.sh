@@ -2,6 +2,8 @@
 # Fuzzy repo picker with git worktree support.
 # If the selected repo already has an agent, offers to create a worktree.
 
+# Load machine-specific overrides (set by installer)
+[ -f "$HOME/.tmux/env.sh" ] && source "$HOME/.tmux/env.sh"
 REPO_DIR="${REPO_DIR:-$HOME/repos}"
 WT_DIR="$REPO_DIR/.worktrees"
 

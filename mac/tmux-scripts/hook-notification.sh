@@ -8,9 +8,10 @@
 INPUT=$(cat)
 NTYPE=$(echo "$INPUT" | sed -n 's/.*"notification_type" *: *"\([^"]*\)".*/\1/p' | head -1)
 
-# Only go red for input-needed notifications
+# Only go red for genuine approval/input requests.
+# idle_prompt fires when Claude finishes a turn — Stop hook already handles that (→ @waiting=2).
 case "$NTYPE" in
-  permission_prompt|idle_prompt|elicitation_dialog) ;;
+  permission_prompt|elicitation_dialog) ;;
   *) exit 0 ;;
 esac
 

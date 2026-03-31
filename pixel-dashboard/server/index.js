@@ -28,7 +28,7 @@ const CLAUDE_PROJECTS_DIR = join(HOME, '.claude', 'projects');
 
 // ── State ────────────────────────────────────────────────────────
 
-/** @type {Map<number, {name: string, waiting: string, path: string}>} */
+/** @type {Map<number, {name: string, waiting: string, path: string, lastTool?: {toolId: string, status: string}}>} */
 const agents = new Map();
 
 /** @type {Map<string, {offset: number, activeTools: Set<string>}>} */
@@ -57,7 +57,9 @@ function tmuxListWindows() {
 }
 
 function isClaude(command) {
-  return command && command.toLowerCase().includes('claude');
+  if (!command) return false;
+  // Match 'claude' or versioned binaries like '2.1.88' (claude symlinks to its version)
+  return command.toLowerCase().includes('claude') || /^\d+\.\d+\.\d+$/.test(command);
 }
 
 function waitingToStatus(waiting) {
@@ -212,6 +214,10 @@ function processTranscriptRecords(agentId, records) {
 
           broadcast({ type: 'agentToolStart', id: agentId, toolId, status });
 
+          // Track last tool so new clients can catch up
+          const agent = agents.get(agentId);
+          if (agent) agent.lastTool = { toolId, status };
+
           const state = transcriptState.get(`agent_${agentId}`);
           if (state) state.activeTools.add(toolId);
         }
@@ -296,12 +302,18 @@ wss.on('connection', (ws) => {
 
   // Send current state to new client
   for (const [id, agent] of agents) {
+    const status = waitingToStatus(agent.waiting);
     ws.send(JSON.stringify({ type: 'agentCreated', id, folderName: agent.name }));
-    ws.send(JSON.stringify({
-      type: 'agentStatus',
-      id,
-      status: waitingToStatus(agent.waiting)
-    }));
+    if (status === 'permission') {
+      ws.send(JSON.stringify({ type: 'agentToolPermission', id }));
+      ws.send(JSON.stringify({ type: 'agentStatus', id, status: 'active' }));
+    } else {
+      ws.send(JSON.stringify({ type: 'agentStatus', id, status }));
+    }
+    // Replay last known tool so overlay shows something meaningful
+    if (agent.lastTool && status !== 'waiting') {
+      ws.send(JSON.stringify({ type: 'agentToolStart', id, ...agent.lastTool }));
+    }
   }
 
   ws.on('message', (raw) => {

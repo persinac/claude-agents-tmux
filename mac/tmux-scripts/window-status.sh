@@ -19,7 +19,8 @@ IS_CURRENT="$4"
 WAITING=$(tmux show-option -wv -t "$WINDOW" @waiting 2>/dev/null)
 CMD=$(tmux display-message -t "$WINDOW" -p '#{pane_current_command}' 2>/dev/null)
 IS_CLAUDE=false
-[ "$CMD" = "claude" ] && IS_CLAUDE=true
+# Match 'claude' or versioned binaries like '2.1.88' (Mac symlinks claude to its version)
+[[ "$CMD" == "claude" || "$CMD" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && IS_CLAUDE=true
 
 format_dur() {
   local E=$1

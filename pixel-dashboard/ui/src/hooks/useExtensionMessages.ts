@@ -281,11 +281,18 @@ export function useExtensionMessages(
       } else if (msg.type === 'agentToolPermission') {
         const id = msg.id as number;
         setAgentTools((prev) => {
-          const list = prev[id];
-          if (!list) return prev;
+          const list = prev[id] ?? [];
+          const hasActiveTool = list.some((t) => !t.done);
+          if (hasActiveTool) {
+            return {
+              ...prev,
+              [id]: list.map((t) => (t.done ? t : { ...t, permissionWait: true })),
+            };
+          }
+          // No active tool (e.g. pre-tool approval dialog) — inject a synthetic entry
           return {
             ...prev,
-            [id]: list.map((t) => (t.done ? t : { ...t, permissionWait: true })),
+            [id]: [...list, { toolId: '_permission', status: 'Needs approval', done: false, permissionWait: true }],
           };
         });
         os.showPermissionBubble(id);
@@ -306,7 +313,9 @@ export function useExtensionMessages(
           if (!hasPermission) return prev;
           return {
             ...prev,
-            [id]: list.map((t) => (t.permissionWait ? { ...t, permissionWait: false } : t)),
+            [id]: list
+            .filter((t) => t.toolId !== '_permission')
+            .map((t) => (t.permissionWait ? { ...t, permissionWait: false } : t)),
           };
         });
         os.clearPermissionBubble(id);
