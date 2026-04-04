@@ -3,7 +3,7 @@
 **Date:** 2026-03-29
 **Status:** Design
 **IDEAS.md item:** #11 (Searchable history)
-**Related:** [minions tiered-memory-implementation-plan](file:///C:/projects/minions/minions-suite/notes/tiered-memory-implementation-plan.md), [minions distributed-memory-knowledge-graphs](file:///C:/projects/minions/minions-suite/notes/distributed-memory-knowledge-graphs.md)
+**Related:** [minions tiered-memory-implementation-plan](https://github.com/persinac/minions-suite/blob/main/notes/tiered-memory-implementation-plan.md), [minions distributed-memory-knowledge-graphs](https://github.com/persinac/minions-suite/blob/main/notes/distributed-memory-knowledge-graphs.md)
 
 ---
 
